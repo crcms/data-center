@@ -3,6 +3,7 @@
 namespace CrCms\DataCenter;
 
 use CrCms\AttributeContract\Connections\DatabaseConnection;
+use CrCms\DataCenter\Drivers\Database;
 use CrCms\DataCenter\Drivers\File;
 use DomainException;
 use Illuminate\Database\ConnectionInterface;
@@ -39,9 +40,9 @@ class Factory
     {
         switch ($driver) {
             case 'database':
-//                return new DatabaseConnection(
-//                    $this->app->make(ConnectionInterface::class), $this->value, $config['table']
-//                );
+                return new Database(
+                    $this->app->make(ConnectionInterface::class), $this->value, $config
+                );
             case 'file':
                 return new File($this->value, $config);
         }

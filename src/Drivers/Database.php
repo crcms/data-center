@@ -1,16 +1,17 @@
 <?php
 
-namespace CrCms\AttributeContract\Connections;
+namespace CrCms\DataCenter\Drivers;
 
 use CrCms\AttributeContract\Contracts\ConnectionContract;
 use CrCms\AttributeContract\Value;
+use CrCms\DataCenter\DataContract;
 use Illuminate\Database\ConnectionInterface;
 
 /**
- * Class DatabaseConnection
- * @package CrCms\AttributeContract\Connections
+ * Class Database
+ * @package CrCms\DataCenter\Drivers
  */
-class Database implements ConnectionContract
+class Database implements DataContract
 {
     protected $connection;
 
@@ -18,46 +19,52 @@ class Database implements ConnectionContract
 
     protected $value;
 
-    public function __construct(ConnectionInterface $connection, Value $value, string $table)
+    protected $config;
+
+    public function __construct(ConnectionInterface $connection, Value $value, array $config)
     {
         $this->connection = $connection;
         $this->value = $value;
-        $this->table = $table;
+        $this->config = $config;
     }
 
-    public function get(string $key,?string $app = null)
+    public function get(string $key)
     {
-        $cache = $this->table()->where('key', '=', $key)->first();
+        $cache = $this->query()->where('key', '=', $key)->first();
         return $this->value->unserialize($cache->type, $cache->value);
     }
 
-    public function exists(string $key,?string $app = null): bool
+    public function has(string $key): bool
     {
-        return (bool)$this->table()->where('key', '=', $prefixed)->first();
+        return (bool)$this->query()->where('key', '=', $prefixed)->first();
     }
 
-    public function put(string $key, $value, string $remark = '', ?string $app = null): bool
+    public function put(string $key, $value, string $remark = ''): bool
     {
-        $type = $this->value->type($type);
+//        $type = $this->value->type($type);
         $value = $this->value->serialize($value);
-        return (bool)$this->table()->insert([
-            'app' => $app, 'key' => $key, 'value' => $value, $remark
+        return (bool)$this->query()->insert([
+            'channel' => $this->channel(), 'key' => $key, 'value' => $value, $remark
         ]);
     }
 
-    public function remove(string $key,?string $app = null): bool
+    public function delete(string $key, ?string $app = null): bool
     {
-        return (bool)$this->table()->where('key', '=', $key)->first();
+        return (bool)$this->query()->where('key', '=', $key)->first();
     }
 
-    public function all(string $key,?string $app = null)
+    public function all(string $key, ?string $app = null)
     {
 //        $this->table()->where('app')
     }
 
-
-    protected function table()
+    protected function channel(): string
     {
-        return $this->connection->table($this->table);
+        return $this->config['channel'] ?? 'default';
+    }
+
+    protected function query()
+    {
+        return $this->connection->table($this->config['table'])->where('channel',$this->channel());
     }
 }

@@ -1,0 +1,38 @@
+{
+    "name": "crcms/data-center",
+    "description": "A simple configuration center, constant pool storage scheduling center",
+	"keywords": ["constant pool", "config", "configuration center", "data"],
+	"homepage": "https://github.com/crcms/data-center",
+    "license": "MIT",
+    "require": {
+        "php":">=7.1",
+        "illuminate/support":"^5.5"
+    },
+	"autoload": {
+        "files": [
+        ],
+        "psr-4": {
+            "CrCms\\DataCenter\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "CrCms\\DataCenter\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CrCms\\DataCenter\\DataCenterServiceProvider"
+            ],
+            "aliases": {
+            }
+        }
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.laravel-china.org"
+        }
+    }
+}

@@ -8,29 +8,42 @@ return [
     |
     */
 
-    'default' => env('DATA_CENTER_DRIVER', 'config'),
+    'default' => env('DATA_CENTER_DRIVER', 'database'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Data center Connections
+    |--------------------------------------------------------------------------
+    |
+    | Currently only supports database drivers
+    |
+    | database.connection   Database connection used by default
+    | database.table    Data table used for connection
+    | database.channel  Default channel for data
+    | database.refresh  Local cache time (minutes), set to 0 if no cache is required
+    |
+    |
+    */
 
     'connections' => [
-            'redis' => [
-                'driver' => 'redis',
-                'connection' => 'cache',
-            ],
 
-            'database' => [
-                'driver' => 'database',
-                'table' => 'cache',
-                'connection' => null,
-            ],
+        'database' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'data_center',
+            'channel' => 'abc',
+            'refresh' => 0,//cache refresh time
+        ],
 
-            'file' => [
-                'driver' => 'file',
-                'path' => './data-center',//storage_path('data-center'),
-            ],
+        /*'redis' => [
+            'driver' => 'redis',
+            'connection' => 'cache',
+        ],*/
 
-            'config' => [
-                'driver' => 'file',
-                'path' => './config.php',//storage_path('data-center'),
-            ],
+        /*'file' => [
+            'driver' => 'file',
+            'path' => storage_path('data-center'),
+        ],*/
+
     ],
 ];

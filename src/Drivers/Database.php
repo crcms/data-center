@@ -2,10 +2,13 @@
 
 namespace CrCms\DataCenter\Drivers;
 
-use CrCms\AttributeContract\Contracts\ConnectionContract;
-use CrCms\AttributeContract\Value;
+use Carbon\Carbon;
+use CrCms\DataCenter\Value;
 use CrCms\DataCenter\DataContract;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Contracts\Cache\Repository as Cache;
+use Illuminate\Support\Arr;
 
 /**
  * Class Database
@@ -13,58 +16,163 @@ use Illuminate\Database\ConnectionInterface;
  */
 class Database implements DataContract
 {
+    /**
+     * @var ConnectionInterface
+     */
     protected $connection;
 
+    /**
+     * @var
+     */
     protected $table;
 
+    /**
+     * @var Value
+     */
     protected $value;
 
+    /**
+     * @var array
+     */
     protected $config;
 
-    public function __construct(ConnectionInterface $connection, Value $value, array $config)
+    /**
+     * @var Cache
+     */
+    protected $cache;
+
+    /**
+     * Database constructor.
+     * @param ConnectionInterface $connection
+     * @param Cache $cache
+     * @param Value $value
+     * @param array $config
+     */
+    public function __construct(ConnectionInterface $connection, Cache $cache, Value $value, array $config)
     {
         $this->connection = $connection;
+        $this->cache = $cache;
         $this->value = $value;
         $this->config = $config;
     }
 
-    public function get(string $key)
+    /**
+     * @param string $key
+     * @return mixed
+     */
+    public function get(string $key, $default = null)
     {
-        $cache = $this->query()->where('key', '=', $key)->first();
-        return $this->value->unserialize($cache->type, $cache->value);
+        $cacheKey = $this->cacheKey($key);
+        $data = $this->cache->get($cacheKey);
+
+        if (is_null($data)) {
+            $data = $this->queryChannel()->where('key', '=', $key)->first();
+            if (is_null($data)) {
+                return $default;
+            }
+            $data = (array)$data;
+        }
+
+        return $this->value->unserialize($data['type'], $data['value']);
     }
 
+    /**
+     * @param string $key
+     * @return bool
+     */
     public function has(string $key): bool
     {
-        return (bool)$this->query()->where('key', '=', $prefixed)->first();
+        $has = $this->cache->has($this->cacheKey($key));
+
+        return $has ? $has :
+            (bool)$this->queryChannel()->where('key', '=', $key)->first();
     }
 
+    /**
+     * @param string $key
+     * @param $value
+     * @param string $remark
+     * @return bool
+     */
     public function put(string $key, $value, string $remark = ''): bool
     {
-//        $type = $this->value->type($type);
-        $value = $this->value->serialize($value);
-        return (bool)$this->query()->insert([
-            'channel' => $this->channel(), 'key' => $key, 'value' => $value, $remark
-        ]);
+        $data = [
+            'key' => $key,
+            'channel' => $this->channel(),
+            'type' => $this->value->type($value),
+            'value' => $this->value->serialize($value),
+            'remark' => $remark
+        ];
+
+        $result = $this->has($key) ?
+            $this->queryChannel()->where('key', $key)->update(Arr::except($data, ['key', 'channel'])) :
+            $this->query()->insert($data);
+
+        $this->cache->put($this->cacheKey($key), $data, $this->getCacheRefreshTime());
+
+        return $result !== false;
     }
 
+    /**
+     * @param string $key
+     * @param null|string $app
+     * @return bool
+     */
     public function delete(string $key, ?string $app = null): bool
     {
-        return (bool)$this->query()->where('key', '=', $key)->first();
+        $this->cache->forget($this->cacheKey($key));
+
+        return (bool)$this->queryChannel()->where('key', '=', $key)->delete();
     }
 
-    public function all(string $key, ?string $app = null)
+    /**
+     * @return array
+     */
+    public function all(): array
     {
-//        $this->table()->where('app')
+        return $this->queryChannel()->get()->mapWithKeys(function ($item) {
+            return [$item->key => $this->value->unserialize($item->type, $item->value)];
+        })->toArray();
     }
 
+    /**
+     * @return string
+     */
     protected function channel(): string
     {
         return $this->config['channel'] ?? 'default';
     }
 
-    protected function query()
+    /**
+     * @return Builder
+     */
+    protected function query(): Builder
     {
-        return $this->connection->table($this->config['table'])->where('channel',$this->channel());
+        return $this->connection->table($this->config['table']);
+    }
+
+    /**
+     * @return Builder
+     */
+    protected function queryChannel(): Builder
+    {
+        return $this->connection->table($this->config['table'])->where('channel', $this->channel());
+    }
+
+    /**
+     * @param string $key
+     * @return string
+     */
+    protected function cacheKey(string $key): string
+    {
+        return "data_center_{$this->config['table']}_{$this->channel()}_{$key}";
+    }
+
+    /**
+     * @return int
+     */
+    protected function getCacheRefreshTime(): int
+    {
+        return $this->config['refresh'] ?? 5;
     }
 }

@@ -78,10 +78,10 @@ class DataCenterServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton('data-center.manager', function ($app) {
-            return new DataCenterManager($app, $this->app->make('attribute.factory'));
+            return new DataCenterManager($app, $this->app->make('data-center.factory'));
         });
 
-        $this->app->singleton('cache.connection', function ($app) {
+        $this->app->singleton('data-center.connection', function ($app) {
             return $app['data-center.manager']->connection();
         });
     }

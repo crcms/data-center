@@ -4,7 +4,7 @@ namespace CrCms\DataCenter;
 
 /**
  * Class Value
- * @package CrCms\AttributeContract
+ * @package CrCms\DataCenter
  */
 class Value
 {
@@ -71,8 +71,14 @@ class Value
                 return json_decode($value, true);
             case static::TYPE_BOOL:
                 return (bool)$value;
+            case static::TYPE_INTEGER:
+                return intval($value);
+            case static::TYPE_FLOAT:
+                return boolval($value);
+            case static::TYPE_STRING:
+                return strval($value);
             default:
-                return (constant('static::' . $type))($value);
+                return (constant('static::TYPE_' . strtoupper($type)))($value);
         }
     }
 

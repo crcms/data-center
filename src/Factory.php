@@ -6,8 +6,8 @@ use CrCms\AttributeContract\Connections\DatabaseConnection;
 use CrCms\DataCenter\Drivers\Database;
 use CrCms\DataCenter\Drivers\File;
 use DomainException;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Foundation\Application;
 
 /**
  * Class Factory
@@ -16,7 +16,7 @@ use Illuminate\Foundation\Application;
 class Factory
 {
     /**
-     * @var Application
+     * @var Container
      */
     protected $app;
 
@@ -26,27 +26,34 @@ class Factory
     protected $value;
 
     /**
-     * ConnectionFactory constructor.
-     * @param Application $app
+     * Factory constructor.
+     * @param Container $app
      * @param Value $value
      */
-    public function __construct(Application $app, Value $value)
+    public function __construct(Container $app, Value $value)
     {
         $this->app = $app;
         $this->value = $value;
     }
 
+    /**
+     * @param string $driver
+     * @param array $config
+     * @return DataContract
+     */
     public function factory(string $driver, array $config): DataContract
     {
-        switch ($driver) {
+        switch ($config['driver']) {
             case 'database':
                 return new Database(
-                    $this->app->make(ConnectionInterface::class), $this->value, $config
+                    $this->app['db']->connection($config['connection'] ?? null),
+                    $this->app['cache']->driver('file'),
+                    $this->value, $config
                 );
             case 'file':
                 return new File($this->value, $config);
         }
 
-        throw new DomainException("Driver {$driver} not exists");
+        throw new DomainException("Driver {$config['driver']} not exists");
     }
 }

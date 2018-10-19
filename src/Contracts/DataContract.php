@@ -10,13 +10,34 @@ use Illuminate\Support\Collection;
  */
 interface DataContract
 {
+    /**
+     * @param string $key
+     * @return bool
+     */
     public function has(string $key): bool;
 
-    public function get(string $key);
+    /**
+     * @param string $key
+     * @param null $default
+     * @return mixed
+     */
+    public function get(string $key, $default = null);
 
+    /**
+     * @param string $key
+     * @param $value
+     * @return bool
+     */
     public function put(string $key, $value): bool;
 
+    /**
+     * @param string $key
+     * @return bool
+     */
     public function delete(string $key): bool;
 
-    public function all(string $key);
+    /**
+     * @return array
+     */
+    public function all(): array;
 }

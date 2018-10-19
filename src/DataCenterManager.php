@@ -5,8 +5,8 @@ namespace CrCms\DataCenter;
 use Illuminate\Contracts\Container\Container;
 
 /**
- * Class ConnectionManager
- * @package CrCms\AttributeContract
+ * Class DataCenterManager
+ * @package CrCms\DataCenter
  */
 class DataCenterManager
 {

@@ -32,7 +32,7 @@ return [
             'connection' => null,
             'table' => 'data_center',
             'channel' => 'abc',
-            'refresh' => 0,//cache refresh time
+            'refresh' => 5,//cache refresh time
         ],
 
         /*'redis' => [

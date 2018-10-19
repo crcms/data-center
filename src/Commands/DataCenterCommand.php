@@ -25,17 +25,13 @@ class DataCenterCommand extends Command
      */
     protected $description = 'Data center command operation';
 
-
     /**
      *
      */
     public function handle()
     {
         $action = $this->argument('action');
-        $connnection = $this->argument('connection');
-        if (is_null($connnection)) {
-            $connnection = config('data-center.default');
-        }
+        $connnection = $this->connection();
 
         $connnection = app('data-center.manager')->connection($connnection);
         $this->$action($connnection);
@@ -56,7 +52,7 @@ class DataCenterCommand extends Command
      */
     protected function put(DataContract $connnection)
     {
-        $key = $this->ask('Please Input key');
+        $key = $this->key();
 
         $value = $this->ask('Please Input value');
 
@@ -85,8 +81,7 @@ class DataCenterCommand extends Command
      */
     protected function get(DataContract $connnection)
     {
-        $key = $this->ask('Please Input key');
-        $value = $connnection->get($key);
+        $value = $connnection->get($this->key());
         if (is_null($value)) {
             $this->error("The key:{$key} does not exist");
         }
@@ -99,14 +94,32 @@ class DataCenterCommand extends Command
      */
     protected function delete(DataContract $connnection)
     {
-        $key = $this->ask('Please Input key');
-
-        if (!$connnection->has($key)) {
+        if (!$connnection->has($this->key())) {
             $this->error("The key:{$key} does not exist");
         }
 
         $connnection->delete($key);
 
         $this->info("The key:{$key} delete success");
+    }
+
+    /**
+     * @return string
+     */
+    protected function key(): string
+    {
+        return $this->ask('Please Input key');
+    }
+
+    /**
+     * @return string
+     */
+    protected function connection(): string
+    {
+        $connnection = $this->argument('connection');
+        if (is_null($connnection)) {
+            $connnection = config('data-center.default');
+        }
+        return $connnection;
     }
 }

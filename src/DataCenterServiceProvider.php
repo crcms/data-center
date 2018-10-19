@@ -9,6 +9,7 @@
 
 namespace CrCms\DataCenter;
 
+use CrCms\DataCenter\Commands\DataCenterCommand;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Lumen\Application;
 
@@ -99,6 +100,9 @@ class DataCenterServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
+        $this->commands([
+            DataCenterCommand::class
+        ]);
     }
 
     /**

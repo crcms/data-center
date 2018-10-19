@@ -126,6 +126,17 @@ class Database implements DataContract
     }
 
     /**
+     * @return void
+     */
+    public function flush(): void
+    {
+        $this->queryChannel()->get()->each(function($item){
+            $this->cache->forget($this->cacheKey($item->key));
+            $this->delete($item->key);
+        });
+    }
+
+    /**
      * @return array
      */
     public function all(): array

@@ -40,4 +40,9 @@ interface DataContract
      * @return array
      */
     public function all(): array;
+
+    /**
+     * @return void
+     */
+    public function flush(): void;
 }
